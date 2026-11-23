@@ -7,6 +7,17 @@ export const globalStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  // Pantalla blanca, como en los mockups
+  sheet: {
+    flex: 1,
+    backgroundColor: colors.card,
+  },
+  // Bloque gris claro dentro de una pantalla blanca
+  tile: {
+    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
   screenContent: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,

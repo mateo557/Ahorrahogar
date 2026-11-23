@@ -1,6 +1,6 @@
 // src/components/Input.tsx
 import { TextInput, View, Text, StyleSheet, TextInputProps } from 'react-native';
-import { colors, spacing, radius, fontSize,fontWeight  } from '../styles/theme';
+import { colors, spacing, radius, fontSize, fontWeight, fontFamily } from '../styles/theme';
 
 type PropsBlank = TextInputProps & {
   label?: string;
@@ -67,8 +67,8 @@ export function AmountInput({ label, value, onChangeText }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    marginVertical: spacing.xl,
+    alignItems: 'flex-start',
+    marginVertical: spacing.lg,
   },
   label: {
     fontSize: fontSize.md,
@@ -80,12 +80,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   symbol: {
+    fontFamily: fontFamily.display,
     fontSize: fontSize.display,
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
     marginRight: spacing.xs,
   },
   input: {
+    fontFamily: fontFamily.display,
     fontSize: fontSize.display,
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
