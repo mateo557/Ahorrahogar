@@ -16,6 +16,10 @@ export function AppNavigation(){
     return(
         <NavigationContainer>
             <Stack.Navigator screenOptions ={{headerShown: false}}>
+                <Stack.Screen
+                name= "Resume"
+                component={Resume}
+                />
                  <Stack.Screen
                 name= "Login"
                 component={LoginScreen}
@@ -29,16 +33,14 @@ export function AppNavigation(){
                 component={Inputs}
                 //component={MensajeBotton}
                 />
-               <Stack.Screen
-                name= "Resume"
-                component={Resume}
-                />               
+                              
                 <Stack.Screen
                 name= "Goals"
                 component={Goals}
                 />
                 <Stack.Screen
-                name= "Movements"
+                
+                name="Movements" 
                 component={Movements}
                 />
             </Stack.Navigator>
