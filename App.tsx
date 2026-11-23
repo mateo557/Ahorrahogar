@@ -1,10 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import {AppNavigation} from './src/navigation/AppNavigation';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AppNavigation } from './src/navigation/AppNavigation';
 
 export default function App() {
   return (
-  <AppNavigation/>
+    <SafeAreaProvider>
+      {/* Texto oscuro por defecto; el Resumen lo cambia a claro porque tiene cabecera verde */}
+      <StatusBar style="dark" />
+      <AppNavigation />
+    </SafeAreaProvider>
   );
 }
