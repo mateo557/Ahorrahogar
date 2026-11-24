@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FlatList, ActivityIndicator, Text, View, Pressable, Alert, StyleSheet } from 'react-native';
+import { FlatList, ActivityIndicator, Text, View, Pressable, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles/GlobalStyles';
@@ -10,11 +10,14 @@ import { Movemnts } from '../types/movements';
 import { Category } from '../types/category';
 import { Fab } from '../components/Fab';
 import { formatCOP } from '../utils/format';
+import { SelectorMes } from '../components/SelectorMes';
+import { useMes } from '../context/MesContext';
 
 type Props = TabScreenProps<'Movements'>;
 
 export function Movements({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { mes } = useMes();
   const [movements, setMovements] = useState<Movemnts[]>([]);
   const [categories, setCategories] = useState<Map<number, Category>>(new Map());
 
@@ -23,15 +26,16 @@ export function Movements({ navigation }: Props) {
 
   // La carga es una función con nombre para poder repetirla después de eliminar
   const cargar = useCallback(() => {
-    Promise.all([getMovements(), getCategories()])
+    setLoading(true);
+    Promise.all([getMovements(mes), getCategories()])
       .then(([movs, cats]) => {
-        setMovements([...movs].sort((a, b) => b.fecha.localeCompare(a.fecha)));
+        setMovements(movs);
         setCategories(new Map(cats.map((c) => [c.id, c])));
         setError(null);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [mes]);
 
   // Se ejecuta cada vez que la pestaña vuelve a mostrarse
   useFocusEffect(cargar);
@@ -63,11 +67,8 @@ export function Movements({ navigation }: Props) {
 
   return (
     <View style={globalStyles.sheet}>
-      <View style={[styles.cabecera, { paddingTop: insets.top + spacing.lg }]}>
-        <Text style={globalStyles.h2}>Movimientos</Text>
-        <Text style={[globalStyles.body, { marginTop: spacing.xs }]}>
-          Todo lo que ha entrado y salido este mes
-        </Text>
+      <View style={[globalStyles.listHeader, { paddingTop: insets.top + spacing.lg }]}>
+        <SelectorMes titulo="Movimientos" />
         {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />}
         {error && (
           <Text style={{ color: colors.danger, marginTop: spacing.md }}>
@@ -78,8 +79,11 @@ export function Movements({ navigation }: Props) {
 
       <FlatList
         data={movements}
+        ListEmptyComponent={
+          !loading && !error ? <Text style={globalStyles.caption}>No hay movimientos en este mes.</Text> : undefined
+        }
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.lista}
+        contentContainerStyle={globalStyles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         renderItem={({ item }) => {
           const esGasto = categories.get(item.categoria_id)?.tipo === 'gasto';
@@ -90,7 +94,7 @@ export function Movements({ navigation }: Props) {
               onPress={() => navigation.navigate('Inputs', { movement: item })}
               onLongPress={() => confirmarEliminar(item)}
             >
-              <View style={[globalStyles.tile, styles.fila]}>
+              <View style={[globalStyles.tile, globalStyles.tileRow]}>
                 <View>
                   <Text style={typography.body}>{NombreCategoria}</Text>
                   <Text style={globalStyles.caption}>{item.fecha}</Text>
@@ -112,19 +116,3 @@ export function Movements({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  cabecera: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  lista: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: 112, // deja libre el botón "+" para que no tape el último movimiento
-  },
-  fila: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-});
