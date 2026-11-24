@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from './theme';
+import { colors, fontFamily, fontSize, fontWeight, radius, sizes, spacing, typography } from './theme';
 
 export const globalStyles = StyleSheet.create({
   // Pantalla completa
@@ -62,5 +62,110 @@ export const globalStyles = StyleSheet.create({
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  // ---- Estructura de pantalla ----
+  // Cabecera blanca con línea inferior (Metas)
+  screenHeader: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  // Cabecera sin línea (Movimientos)
+  listHeader: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  // Contenido que se desplaza, con aire alrededor y entre bloques
+  screenBody: {
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  // Contenido de una lista (FlatList)
+  listContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: sizes.fabClearance,
+  },
+  // Cabecera verde grande (Resumen)
+  hero: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xxl,
+  },
+  heroAmount: {
+    color: colors.textInverse,
+    fontFamily: fontFamily.display,
+    fontSize: 44,
+    fontWeight: fontWeight.bold,
+    marginTop: spacing.sm,
+  },
+  heroNote: {
+    color: colors.primaryLight,
+    fontSize: fontSize.md,
+    marginTop: spacing.xs,
+  },
+
+  // ---- Filas ----
+  // Fila dentro de un tile: contenido a los lados
+  tileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  // Icono + texto alineados con espacio entre ellos
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  iconRowWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+
+  // ---- Barras de progreso ----
+  // Pista blanca: para usarla sobre un tile gris
+  progressTrack: {
+    height: sizes.progressBar,
+    borderRadius: radius.full,
+    backgroundColor: colors.card,
+    overflow: 'hidden',
+  },
+  // Pista gris: para usarla sobre fondo blanco
+  progressTrackOnWhite: {
+    height: sizes.progressBar,
+    borderRadius: radius.full,
+    backgroundColor: colors.chartTrack,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: sizes.progressBar,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+  },
+  progressFillLight: {
+    height: sizes.progressBar,
+    borderRadius: radius.full,
+    backgroundColor: colors.chart,
+  },
+
+  // ---- Botón con borde ("Nueva meta") ----
+  outlineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    backgroundColor: colors.card,
+  },
+  outlineButtonText: {
+    color: colors.textPrimary,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
   },
 });
