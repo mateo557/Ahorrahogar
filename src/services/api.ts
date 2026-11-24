@@ -21,9 +21,8 @@ export async function getMembers(): Promise<Member[]> {
   return response.json();
 }
 
-export async function getGoals(): Promise<Goal[]> {
-   console.log('getGoals', `${API_URL}/api/Goal`);
-  const response = await fetch(`${API_URL}/api/Goal`);
+export async function getGoals(hogar_id = 1): Promise<Goal[]> {
+  const response = await fetch(`${API_URL}/api/Goal?hogarId=${hogar_id}`);
   if (!response.ok) {
     throw new Error(`Error ${response.status} al obtener objetivos`);
   }
@@ -122,4 +121,23 @@ export async function createGoal(data: NewGoal): Promise<Goal> {
     throw new Error(`Error ${response.status}: ${detail}`);
   }
   return response.json();
+}
+
+export async function updateGoal(id: number, data: NewGoal): Promise<void> {
+  const response = await fetch(`${API_URL}/api/Goal/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, ...data }),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Error ${response.status}: ${detail}`);
+  }
+}
+
+export async function deleteGoal(id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/api/Goal/${id}`, { method: 'DELETE' });
+  if (!response.ok) {
+    throw new Error(`Error ${response.status} al eliminar la meta`);
+  }
 }

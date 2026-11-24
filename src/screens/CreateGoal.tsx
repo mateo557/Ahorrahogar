@@ -8,18 +8,23 @@ import { colors, iconSize, spacing, typography } from '../styles/theme';
 import { ScreenProps } from '../types/navigation';
 import { AmountInput } from '../components/Input';
 import { LinkButton } from '../components/Buttons';
-import { createGoal } from '../services/api';
-import { fechaParaApi, formatFechaCorta, formatMiles } from '../utils/format';
+import { createGoal, deleteGoal, updateGoal } from '../services/api';
+import { fechaDesdeTexto, fechaParaApi, formatFechaCorta, formatMiles } from '../utils/format';
 
 type Props = ScreenProps<'CreateGoal'>;
 
-export function CreateGoal({ navigation }: Props) {
+export function CreateGoal({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
 
-  const [nombre, setNombre] = useState('');
+  // Si venimos de tocar una meta, llega completa; si venimos de "Nueva meta", es undefined
+  const editando = route.params?.goal;
+
+  const [nombre, setNombre] = useState(editando?.nombre ?? '');
   // Solo dígitos ("2000000"); en pantalla se muestra con puntos ("2.000.000")
-  const [monto, setMonto] = useState('');
-  const [fechaLimite, setFechaLimite] = useState(new Date());
+  const [monto, setMonto] = useState(editando ? String(Math.round(editando.montoobjetivo)) : '');
+  const [fechaLimite, setFechaLimite] = useState(
+    editando ? fechaDesdeTexto(editando.fechalimite) : new Date()
+  );
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -39,12 +44,18 @@ export function CreateGoal({ navigation }: Props) {
 
     try {
       setSaving(true);
-      await createGoal({
-        hogar_Id: 1, // TODO: reemplazar con el hogar del usuario cuando exista el login
+      const payload = {
+        hogar_Id: editando?.hogar_Id ?? 1, // TODO: reemplazar con el hogar del usuario cuando exista el login
         nombre: nombre.trim(),
         montoobjetivo: valor,
         fechalimite: fechaParaApi(fechaLimite),
-      });
+      };
+
+      if (editando) {
+        await updateGoal(editando.id, payload);
+      } else {
+        await createGoal(payload);
+      }
       // Vuelve a Metas; la lista se recarga sola al mostrarse
       navigation.goBack();
     } catch (e: any) {
@@ -53,6 +64,31 @@ export function CreateGoal({ navigation }: Props) {
       setSaving(false);
     }
   };
+
+  const eliminar = () => {
+    if (!editando) return;
+    Alert.alert('Eliminar meta', '¿Seguro que quieres eliminarla? No se puede deshacer.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setSaving(true);
+            await deleteGoal(editando.id);
+            navigation.goBack();
+          } catch (e: any) {
+            Alert.alert('No se pudo eliminar', e.message);
+          } finally {
+            setSaving(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  const titulo = editando ? 'Editar meta' : 'Nueva meta';
+  const textoBoton = saving ? 'Guardando...' : editando ? 'Guardar cambios' : 'Guardar meta';
 
   return (
     <View style={globalStyles.sheet}>
@@ -65,7 +101,7 @@ export function CreateGoal({ navigation }: Props) {
         >
           <Ionicons name="close" size={iconSize.lg} color={colors.textPrimary} />
         </Pressable>
-        <Text style={typography.h3}>Nueva meta</Text>
+        <Text style={typography.h3}>{titulo}</Text>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -95,15 +131,22 @@ export function CreateGoal({ navigation }: Props) {
             <DateTimePicker
               value={fechaLimite}
               mode="date"
-              minimumDate={new Date()}
+              // Al crear no se permite una fecha pasada; al editar sí, por si la meta ya vencía
+              minimumDate={editando ? undefined : new Date()}
               display={Platform.OS === 'ios' ? 'inline' : 'default'}
               onChange={onChangeFecha}
             />
           )}
+
+          {editando && (
+            <Pressable onPress={eliminar} style={globalStyles.dangerLink} accessibilityRole="button">
+              <Text style={globalStyles.dangerLinkText}>Eliminar meta</Text>
+            </Pressable>
+          )}
         </ScrollView>
 
         <View style={[globalStyles.formFooter, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-          <LinkButton title={saving ? 'Guardando...' : 'Guardar meta'} onPress={guardar} />
+          <LinkButton title={textoBoton} onPress={guardar} />
         </View>
       </KeyboardAvoidingView>
     </View>

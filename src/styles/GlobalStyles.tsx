@@ -205,4 +205,16 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
   },
+
+  // Texto de acción destructiva ("Eliminar ...") al final de un formulario
+  dangerLink: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  dangerLinkText: {
+    color: colors.danger,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
+  },
 });
