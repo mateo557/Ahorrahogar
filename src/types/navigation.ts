@@ -17,9 +17,10 @@ export type AppStackParamList = {
   CreatePerfil: undefined;
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
   Inputs: { movement?: Movemnts } | undefined;
+  CreateGoal: undefined;
 };
 
-// Para pantallas que están en el stack (Login, CreatePerfil, Inputs)
+// Para pantallas que están en el stack (Login, CreatePerfil, Inputs, CreateGoal)
 export type ScreenProps<RouteName extends keyof AppStackParamList> =
   NativeStackScreenProps<AppStackParamList, RouteName>;
 

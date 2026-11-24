@@ -168,4 +168,41 @@ export const globalStyles = StyleSheet.create({
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
   },
+
+  // ---- Formularios (pantallas que se abren encima de las pestañas) ----
+  formTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  formBody: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  formLabel: {
+    ...typography.caption,
+    marginTop: spacing.xl,
+  },
+  // Campo con línea inferior (texto, fecha)
+  formField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  formInputText: {
+    fontSize: fontSize.base,
+    color: colors.textPrimary,
+  },
+  formFooter: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+  },
 });

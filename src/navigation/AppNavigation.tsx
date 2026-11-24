@@ -10,6 +10,7 @@ import { Movements } from '../screens/Movements';
 import { Goals } from '../screens/Goals';
 import { Profile } from '../screens/Profile';
 import { Inputs } from '../screens/Inputs';
+import { CreateGoal } from '../screens/CreateGoal';
 import { CreatePerfil } from '../screens/CreatePerfil';
 import { LoginScreen } from '../screens/Login';
 
@@ -63,6 +64,8 @@ export function AppNavigation() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         {/* "Nuevo gasto": se abre encima de las pestañas, sin la barra inferior */}
         <Stack.Screen name="Inputs" component={Inputs} options={{ presentation: 'modal' }} />
+        {/* "Nueva meta": también encima de las pestañas */}
+        <Stack.Screen name="CreateGoal" component={CreateGoal} options={{ presentation: 'modal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -44,3 +44,11 @@ export const moverMes = ({ anio, mes }: MesAnio, delta: number): MesAnio => {
 
 // Negativo si a es anterior a b, 0 si son el mismo mes, positivo si a es posterior
 export const compararMes = (a: MesAnio, b: MesAnio) => a.anio * 12 + a.mes - (b.anio * 12 + b.mes);
+
+// Para enviar a la API: 2026-11-18
+export const fechaParaApi = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
