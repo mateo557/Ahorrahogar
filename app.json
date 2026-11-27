@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mi-app",
-    "slug": "mi-app",
+    "name": "Ahorrahogar",
+    "slug": "ahorrahogar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mateo.ahorrahogar",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -24,7 +25,22 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-status-bar",
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": false
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8350750a-f32a-496d-8646-91481e2e802a"
+      }
+    },
+    "owner": "mateo_quintana"
   }
 }
