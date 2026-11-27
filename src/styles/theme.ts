@@ -71,6 +71,11 @@ export const iconSize = {
   lg: 26,
   xl: 32,
 };
+// Medidas fijas que se repiten en varias pantallas
+export const sizes = {
+  progressBar: 8, // alto de las barras de progreso
+  fabClearance: 112, // espacio al final de las listas para que el "+" no tape el último elemento
+};
 //Bordes Redondos
 export const radius = {
   sm: 8,

@@ -25,3 +25,22 @@ export function mesActual(hoy = new Date()) {
     prefijo: `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`,
   };
 }
+
+// ---- Selector de mes (pantalla Resumen) ----
+
+// mes va de 0 (enero) a 11 (diciembre), igual que Date.getMonth()
+export type MesAnio = { anio: number; mes: number };
+
+export const mesDeHoy = (hoy = new Date()): MesAnio => ({ anio: hoy.getFullYear(), mes: hoy.getMonth() });
+
+// { 2026, 10 } -> "noviembre 2026"
+export const nombreMes = ({ anio, mes }: MesAnio) => `${MESES[mes]} ${anio}`;
+
+// Avanza o retrocede meses y ajusta el año solo: moverMes({2026, 0}, -1) -> diciembre 2025
+export const moverMes = ({ anio, mes }: MesAnio, delta: number): MesAnio => {
+  const total = anio * 12 + mes + delta;
+  return { anio: Math.floor(total / 12), mes: total % 12 };
+};
+
+// Negativo si a es anterior a b, 0 si son el mismo mes, positivo si a es posterior
+export const compararMes = (a: MesAnio, b: MesAnio) => a.anio * 12 + a.mes - (b.anio * 12 + b.mes);
