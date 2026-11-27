@@ -1,31 +1,27 @@
 import { useCallback, useState } from 'react';
-import { FlatList, ActivityIndicator, Text, View, Pressable, Alert } from 'react-native'; // NUEVO: Alert
+import { FlatList, ActivityIndicator, Text, View, Pressable, Alert, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles/GlobalStyles';
-import { ScreenProps } from '../types/navigation';
-import { LinkButton } from '../components/Buttons';
+import { TabScreenProps } from '../types/navigation';
 import { colors, spacing, typography } from '../styles/theme';
-import { getMovements, getCategories, deleteMovement } from '../services/api'; // NUEVO: deleteMovement
+import { getMovements, getCategories, deleteMovement } from '../services/api';
 import { Movemnts } from '../types/movements';
 import { Category } from '../types/category';
+import { Fab } from '../components/Fab';
+import { formatCOP } from '../utils/format';
 
-type Props = ScreenProps<'Movements'>;
-
-const formatMonto = (n: number) =>
-  new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0,
-  }).format(n);
+type Props = TabScreenProps<'Movements'>;
 
 export function Movements({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const [movements, setMovements] = useState<Movemnts[]>([]);
   const [categories, setCategories] = useState<Map<number, Category>>(new Map());
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // NUEVO: la carga ahora es una función con nombre, para poder repetirla
+  // La carga es una función con nombre para poder repetirla después de eliminar
   const cargar = useCallback(() => {
     Promise.all([getMovements(), getCategories()])
       .then(([movs, cats]) => {
@@ -37,16 +33,16 @@ export function Movements({ navigation }: Props) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Se ejecuta cada vez que la pantalla vuelve a mostrarse
+  // Se ejecuta cada vez que la pestaña vuelve a mostrarse
   useFocusEffect(cargar);
 
-  // NUEVO: pide confirmación, borra y recarga la lista
+  // Pide confirmación, borra y recarga la lista
   const confirmarEliminar = (item: Movemnts) => {
     const nombre = categories.get(item.categoria_id)?.nombre ?? 'este movimiento';
 
     Alert.alert(
       'Eliminar movimiento',
-      `¿Seguro que quieres eliminar "${nombre}" por valor de ${formatMonto(item.monto)}? `,
+      `¿Seguro que quieres eliminar "${nombre}" por valor de ${formatCOP(item.monto)}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -55,7 +51,7 @@ export function Movements({ navigation }: Props) {
           onPress: async () => {
             try {
               await deleteMovement(item.id);
-              cargar(); // en vez de goBack(), refresca la lista que ya estás viendo
+              cargar();
             } catch (e: any) {
               Alert.alert('No se pudo eliminar', e.message);
             }
@@ -66,18 +62,25 @@ export function Movements({ navigation }: Props) {
   };
 
   return (
-    <View style={globalStyles.screenContent}>
-      <Text style={globalStyles.h2}>Movimientos</Text>
-      <Text style={[globalStyles.body, { marginBottom: spacing.sm }]}>
-        Todo lo que ha entrado y salido este mes
-      </Text>
-
-      {loading && <ActivityIndicator />}
-      {error && <Text style={{ color: colors.danger }}>{error}</Text>}
+    <View style={globalStyles.sheet}>
+      <View style={[styles.cabecera, { paddingTop: insets.top + spacing.lg }]}>
+        <Text style={globalStyles.h2}>Movimientos</Text>
+        <Text style={[globalStyles.body, { marginTop: spacing.xs }]}>
+          Todo lo que ha entrado y salido este mes
+        </Text>
+        {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.md }} />}
+        {error && (
+          <Text style={{ color: colors.danger, marginTop: spacing.md }}>
+            No se pudieron cargar los movimientos. Revisa que la API esté encendida. ({error})
+          </Text>
+        )}
+      </View>
 
       <FlatList
         data={movements}
         keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.lista}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         renderItem={({ item }) => {
           const esGasto = categories.get(item.categoria_id)?.tipo === 'gasto';
           const NombreCategoria = categories.get(item.categoria_id)?.nombre ?? 'Sin categoría';
@@ -87,17 +90,7 @@ export function Movements({ navigation }: Props) {
               onPress={() => navigation.navigate('Inputs', { movement: item })}
               onLongPress={() => confirmarEliminar(item)}
             >
-              <View
-                style={[
-                  globalStyles.card,
-                  {
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: spacing.xs,
-                  },
-                ]}
-              >
+              <View style={[globalStyles.tile, styles.fila]}>
                 <View>
                   <Text style={typography.body}>{NombreCategoria}</Text>
                   <Text style={globalStyles.caption}>{item.fecha}</Text>
@@ -105,7 +98,7 @@ export function Movements({ navigation }: Props) {
                 <View style={{ alignItems: 'flex-end', marginLeft: spacing.sm }}>
                   <Text style={{ color: esGasto ? colors.danger : colors.success }}>
                     {esGasto ? '-' : ''}
-                    {formatMonto(item.monto)}
+                    {formatCOP(item.monto)}
                   </Text>
                   <Text style={globalStyles.caption}>{item.nota}</Text>
                 </View>
@@ -115,10 +108,23 @@ export function Movements({ navigation }: Props) {
         }}
       />
 
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
-        <LinkButton title="Nuevo movimiento" onPress={() => navigation.navigate('Inputs')} />
-        <LinkButton title="Ir a Resumen" onPress={() => navigation.navigate('Resume')} />
-      </View>
+      <Fab accessibilityLabel="Nuevo movimiento" onPress={() => navigation.navigate('Inputs')} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cabecera: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  lista: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: 112, // deja libre el botón "+" para que no tape el último movimiento
+  },
+  fila: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});

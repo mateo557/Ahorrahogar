@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Text, View, Button, Alert, Pressable, Platform } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles/GlobalStyles';
-import { InputBlanck, AmountInput } from '../components/Input';
+import { AmountInput } from '../components/Input';
 import { ScreenProps } from '../types/navigation';
 import { LinkButton } from '../components/Buttons';
-import { colors, spacing, typography } from '../styles/theme';
-import { createMovement, updateMovement, getCategories,deleteMovement } from '../services/api'; // NUEVO: updateMovement
+import { colors, fontSize, radius, spacing, typography } from '../styles/theme';
+import { createMovement, updateMovement, deleteMovement, getCategories } from '../services/api';
 import { Category } from '../types/category';
+import { formatFechaCorta, formatMiles } from '../utils/format';
 
 type Props = ScreenProps<'Inputs'>;
-
-// ...aquí siguen ExampleScreen y MensajeBotton sin cambios...
 
 // Para enviar a la API: 2026-11-18
 const toYMD = (d: Date) => {
@@ -21,25 +32,34 @@ const toYMD = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
-// Para mostrar al usuario: 18/11/2026
-const toDisplay = (d: Date) => d.toLocaleDateString('es-CO');
+// Icono del chip de categoría (se muestra solo en la categoría elegida)
+const iconoCategoria = (nombre: string): keyof typeof Ionicons.glyphMap => {
+  const n = nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+  if (n.includes('comida') || n.includes('mercado')) return 'cart-outline';
+  if (n.includes('transporte')) return 'bus-outline';
+  if (n.includes('servicio')) return 'flash-outline';
+  if (n.includes('salario') || n.includes('ingreso')) return 'cash-outline';
+  return 'pricetag-outline';
+};
 
-export function Inputs({ navigation, route }: Props) {   // NUEVO: route
-  // NUEVO: si venimos de tocar un movimiento, llega completo; si venimos de
-  // "Nuevo movimiento", es undefined
+export function Inputs({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
+
+  // Si venimos de tocar un movimiento, llega completo; si venimos del "+", es undefined
   const editando = route.params?.movement;
 
-  // NUEVO: los estados arrancan con los datos del movimiento si se está editando
   const [Fecha, setFecha] = useState(
     editando ? new Date(`${editando.fecha.slice(0, 10)}T00:00:00`) : new Date()
   );
   const [showPicker, setShowPicker] = useState(false);
   const [Nota, setNota] = useState(editando?.nota ?? '');
-  const [monto, setMonto] = useState(editando ? String(editando.monto) : '');
+  // Se guarda solo con dígitos ("45000"); en pantalla se muestra con puntos ("45.000")
+  const [monto, setMonto] = useState(editando ? String(Math.round(editando.monto)) : '');
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriaId, setCategoriaId] = useState<number | null>(
-    editando?.categoria_id ?? null
-  );
+  const [categoriaId, setCategoriaId] = useState<number | null>(editando?.categoria_id ?? null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -54,8 +74,8 @@ export function Inputs({ navigation, route }: Props) {   // NUEVO: route
   };
 
   const guardar = async () => {
-    // Quita puntos o símbolos por si AmountInput formatea el texto
-    const valor = Number(monto.replace(/[^\d]/g, ''));
+    if (saving) return;
+    const valor = Number(monto);
 
     if (categoriaId === null || !valor) {
       Alert.alert('Faltan datos', 'Elige una categoría y escribe un monto.');
@@ -65,110 +85,210 @@ export function Inputs({ navigation, route }: Props) {   // NUEVO: route
     try {
       setSaving(true);
       const payload = {
-        hogar_id: 1, // TODO: reemplazar con el hogar del usuario
+        hogar_id: 1, // TODO: reemplazar con el hogar del usuario cuando exista el login
         categoria_id: categoriaId,
         monto: valor,
         fecha: toYMD(Fecha),
         nota: Nota.trim() === '' ? null : Nota.trim(),
       };
 
-      // NUEVO: si hay un movimiento en edición se actualiza, si no se crea
       if (editando) {
         await updateMovement(editando.id, payload);
-        Alert.alert('Movimiento actualizado');
-        navigation.goBack();
       } else {
         await createMovement(payload);
-        Alert.alert('Movimiento guardado');
-        navigation.navigate('Resume');
       }
+      // Vuelve a la pestaña de donde viniste; ahí la lista se recarga sola
+      navigation.goBack();
     } catch (e: any) {
       Alert.alert('No se pudo guardar', e.message);
-      console.error('Error al guardar movimiento:', e.message);
     } finally {
       setSaving(false);
     }
   };
 
+  const eliminar = () => {
+    if (!editando) return;
+    Alert.alert('Eliminar movimiento', '¿Seguro que quieres eliminarlo? No se puede deshacer.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setSaving(true);
+            await deleteMovement(editando.id);
+            navigation.goBack();
+          } catch (e: any) {
+            Alert.alert('No se pudo eliminar', e.message);
+          } finally {
+            setSaving(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  // El título y el botón dicen "gasto" o "ingreso" según la categoría elegida
+  const seleccionada = categories.find((c) => c.id === categoriaId);
+  const tipo = seleccionada ? seleccionada.tipo : 'movimiento';
+  const titulo = editando ? 'Editar movimiento' : `Nuevo ${tipo}`;
+  const textoBoton = saving ? 'Guardando...' : editando ? 'Guardar cambios' : `Guardar ${tipo}`;
+
   return (
-    <View style={globalStyles.screen}>
-      <View style={globalStyles.screenContent}>
-        {/* NUEVO: el título cambia según el modo */}
-        <Text style={globalStyles.h1}>
-          {editando ? 'Editar Movimiento' : 'Nuevo Movimiento'}
-        </Text>
-        <Text style={globalStyles.caption}>Registra los ingresos y gastos</Text>
-
-        {/* Categoría */}
-        <Text style={[globalStyles.caption, { marginTop: spacing.lg }]}>Categoría</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs }}>
-          {categories.map((c) => {
-            const selected = categoriaId === c.id;
-            return (
-              <Pressable
-                key={c.id}
-                onPress={() => setCategoriaId(c.id)}
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: selected ? colors.success : '#ccc',
-                  backgroundColor: selected ? colors.success : 'transparent',
-                }}
-              >
-                <Text style={{ color: selected ? '#fff' : undefined }}>{c.nombre}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Monto */}
-        <View style={{ marginTop: spacing.lg }}>
-          <AmountInput label="Monto (COP)" value={monto} onChangeText={setMonto} />
-        </View>
-
-        {/* Fecha: abre el calendario del teléfono */}
-        <Text style={[globalStyles.caption, { marginTop: spacing.lg }]}>Fecha</Text>
+    <View style={globalStyles.sheet}>
+      <View style={[styles.barraSuperior, { paddingTop: insets.top + spacing.md }]}>
         <Pressable
-          onPress={() => setShowPicker(true)}
-          style={{
-            borderWidth: 1,
-            borderColor: '#ccc',
-            borderRadius: 8,
-            padding: spacing.sm,
-            marginTop: spacing.xs,
-          }}
+          onPress={() => navigation.goBack()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar"
         >
-          <Text style={typography.body}>{toDisplay(Fecha)}</Text>
+          <Ionicons name="close" size={26} color={colors.textPrimary} />
         </Pressable>
-        {showPicker && (
-          <DateTimePicker
-            value={Fecha}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'inline' : 'default'}
-            onChange={onChangeFecha}
-          />
-        )}
+        <Text style={typography.h3}>{titulo}</Text>
+      </View>
 
-        {/* Nota */}
-        <View style={{ marginTop: spacing.lg }}>
-          <InputBlanck
-            label="Nota (opcional)"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.cuerpo} keyboardShouldPersistTaps="handled">
+          <AmountInput
+            label="Monto"
+            value={formatMiles(monto)}
+            onChangeText={(texto) => setMonto(texto.replace(/\D/g, ''))}
+          />
+
+          <Text style={styles.etiqueta}>Categoría</Text>
+          <View style={styles.chips}>
+            {categories.map((c) => {
+              const elegida = categoriaId === c.id;
+              return (
+                <Pressable
+                  key={c.id}
+                  onPress={() => setCategoriaId(c.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: elegida }}
+                  style={[styles.chip, elegida && styles.chipElegida]}
+                >
+                  {elegida && (
+                    <Ionicons name={iconoCategoria(c.nombre)} size={18} color={colors.primary} />
+                  )}
+                  <Text style={[styles.chipTexto, elegida && styles.chipTextoElegida]}>
+                    {c.nombre}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.etiqueta}>Fecha</Text>
+          <Pressable style={styles.campo} onPress={() => setShowPicker(true)}>
+            <Text style={typography.body}>{formatFechaCorta(Fecha)}</Text>
+            <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+          </Pressable>
+          {showPicker && (
+            <DateTimePicker
+              value={Fecha}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'inline' : 'default'}
+              onChange={onChangeFecha}
+            />
+          )}
+
+          <Text style={styles.etiqueta}>Nota</Text>
+          <TextInput
+            style={[styles.campo, styles.notaInput]}
             value={Nota}
             onChangeText={setNota}
-            placeholder="Ej. Compra de alimentos"
+            placeholder="Ej. Mercado de la semana"
+            placeholderTextColor={colors.textTertiary}
           />
-        </View>
 
-        <View style={{ marginTop: spacing.lg }}>
-          {/* NUEVO: el texto del botón cambia según el modo */}
-          <LinkButton
-            title={saving ? 'Guardando...' : editando ? 'Guardar cambios' : 'Guardar Movimiento'}
-            onPress={guardar}
-          />
+          {editando && (
+            <Pressable onPress={eliminar} style={styles.eliminar} accessibilityRole="button">
+              <Text style={styles.eliminarTexto}>Eliminar movimiento</Text>
+            </Pressable>
+          )}
+        </ScrollView>
+
+        <View style={[styles.pie, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+          <LinkButton title={textoBoton} onPress={guardar} />
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  barraSuperior: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  cuerpo: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  etiqueta: {
+    ...typography.caption,
+    marginTop: spacing.xl,
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.full,
+    backgroundColor: colors.background,
+  },
+  chipElegida: {
+    backgroundColor: colors.primaryLight,
+  },
+  chipTexto: {
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+  },
+  chipTextoElegida: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  campo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  notaInput: {
+    fontSize: fontSize.base,
+    color: colors.textPrimary,
+  },
+  eliminar: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  eliminarTexto: {
+    color: colors.danger,
+    fontWeight: '600',
+    fontSize: fontSize.base,
+  },
+  pie: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+  },
+});

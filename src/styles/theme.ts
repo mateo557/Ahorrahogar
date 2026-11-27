@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 //Colores de la app
 export const colors = {
   // Marca / primario
@@ -34,6 +36,10 @@ export const colors = {
   overlay: 'rgba(0,0,0,0.4)',
   transparent: 'transparent',
   disabled: '#cccccc',
+
+  // Gráficas (barras de categorías)
+  chart: '#8fbf5a',
+  chartTrack: '#e9e6df',
 };
 
 export const fontSize = {
@@ -45,6 +51,11 @@ export const fontSize = {
   xl: 20,
   xxl: 26,
   display: 34,
+};
+
+// Serif del sistema para los montos grandes (no requiere instalar fuentes)
+export const fontFamily = {
+  display: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
 };
 
 export const fontWeight = {

@@ -36,7 +36,7 @@ export function CreatePerfil ({ navigation }: Props) {
       />
     </View>
     <View style={{marginTop: spacing.lg}}>
-       <LinkButton title="Comenzar" onPress={() => {Alert.alert('Datos ingresados con exito'); navigation.navigate('Inputs')}} />
+       <LinkButton title="Comenzar" onPress={() => {Alert.alert('Datos ingresados con exito'); navigation.navigate('MainTabs')}} />
       </View>
       </View>
       </View>
