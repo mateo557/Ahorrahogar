@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles/GlobalStyles';
@@ -28,9 +28,9 @@ export function CreateGoal({ navigation, route }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const onChangeFecha = (_: DateTimePickerEvent, selected?: Date) => {
+  const onElegirFecha = (_: DateTimePickerChangeEvent, elegida: Date) => {
     setShowPicker(Platform.OS === 'ios'); // en Android el calendario se cierra solo
-    if (selected) setFechaLimite(selected);
+    setFechaLimite(elegida);
   };
 
   const guardar = async () => {
@@ -45,7 +45,6 @@ export function CreateGoal({ navigation, route }: Props) {
     try {
       setSaving(true);
       const payload = {
-        hogar_Id: editando?.hogar_Id ?? 1, // TODO: reemplazar con el hogar del usuario cuando exista el login
         nombre: nombre.trim(),
         montoobjetivo: valor,
         fechalimite: fechaParaApi(fechaLimite),
@@ -134,7 +133,8 @@ export function CreateGoal({ navigation, route }: Props) {
               // Al crear no se permite una fecha pasada; al editar sí, por si la meta ya vencía
               minimumDate={editando ? undefined : new Date()}
               display={Platform.OS === 'ios' ? 'inline' : 'default'}
-              onChange={onChangeFecha}
+              onValueChange={onElegirFecha}
+              onDismiss={() => setShowPicker(false)}
             />
           )}
 

@@ -18,9 +18,6 @@ import { formatCOP, nombreMes } from '../utils/format';
 
 type Props = TabScreenProps<'Resume'>;
 
-// Por ahora un solo hogar; cuando exista el login saldrá del usuario
-const HOGAR_ID = 1;
-
 type FilaProps = {
   icono: keyof typeof Ionicons.glyphMap;
   color: string;
@@ -28,7 +25,7 @@ type FilaProps = {
   monto: string;
 };
 
-// Fila "Ingresos" / "Gastos": icono, nombre y monto
+
 function FilaTotal({ icono, color, etiqueta, monto }: FilaProps) {
   return (
     <View style={[globalStyles.tile, globalStyles.tileRow]}>
@@ -46,23 +43,22 @@ export function Resume({ navigation }: Props) {
   const isFocused = useIsFocused();
   const { mes } = useMes();
 
-  // La pantalla solo muestra lo que responde la API para el mes elegido
+
   const [balance, setBalance] = useState<Balance | null>(null);
   const [categorias, setCategorias] = useState<CategoryTotal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Las categorías se piden aparte: si fallan, el balance se sigue viendo
   const [loadingCats, setLoadingCats] = useState(true);
   const [errorCats, setErrorCats] = useState<string | null>(null);
 
-  // Se recarga al volver a la pestaña y cada vez que cambia el mes
+  
   useFocusEffect(
     useCallback(() => {
       let activo = true;
       setLoading(true);
       setLoadingCats(true);
 
-      getGastosPorCategoria(HOGAR_ID, mes)
+      getGastosPorCategoria(mes)
         .then((cats) => {
           if (!activo) return;
           setCategorias(cats);
@@ -75,7 +71,7 @@ export function Resume({ navigation }: Props) {
         })
         .finally(() => activo && setLoadingCats(false));
 
-      getBalance(HOGAR_ID, mes)
+      getBalance(mes)
         .then((bal) => {
           if (!activo) return;
           setBalance(bal);
@@ -83,7 +79,6 @@ export function Resume({ navigation }: Props) {
         })
         .catch((e) => {
           if (!activo) return;
-          // Sin esto se quedaría visible el balance del mes anterior
           setBalance(null);
           setError(e.message);
         })

@@ -1,143 +1,59 @@
-import { Member } from '../types/member';
 import { Goal } from '../types/goal';
 import { Movemnts } from '../types/movements';
 import { Category } from '../types/category';
 import { Balance } from '../types/balance';
 import { CategoryTotal } from '../types/categoryTotal';
 import { MesAnio } from '../utils/format';
+import { authFetch, mensajeDeError } from './http';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// El mes se manda a la API como ?anio=2026&mes=11 (mes de 1 a 12). La API es quien filtra.
 const filtroMes = ({ anio, mes }: MesAnio) => `anio=${anio}&mes=${mes + 1}`;
 
-// Una sola ruta para todo lo de movimien//const MOVEMENTS_PATH = '/api/Movemnts';
-
-export async function getMembers(): Promise<Member[]> {
-  const response = await fetch(`${API_URL}/api/Members`);
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al obtener miembros`);
-  }
-  return response.json();
-}
-
-export async function getGoals(hogar_id = 1): Promise<Goal[]> {
-  const response = await fetch(`${API_URL}/api/Goal?hogarId=${hogar_id}`);
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al obtener objetivos`);
-  }
-  return response.json();
-}
-
-
-export type NewMovement = Omit<Movemnts, 'id' | 'creado_en'>;
-
-export async function createMovement(data: NewMovement): Promise<Movemnts> {
- 
-  const response = await fetch(`${API_URL}/api/Movemnts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-    
+async function pedir<T>(ruta: string, metodo: string, cuerpo: object | undefined, error: string): Promise<T> {
+  const response = await authFetch(ruta, {
+    method: metodo,
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Error ${response.status}: ${detail}`);
-    
-  }
+  if (!response.ok) throw new Error(await mensajeDeError(response, error));
   return response.json();
 }
 
-export async function getCategories(): Promise<Category[]> {
-  const response = await fetch(`${API_URL}/api/Category`);
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al obtener categorías`);
-  }
-  return response.json();
-}
-
-export async function getMovements(mes: MesAnio): Promise<Movemnts[]> {
-  const response = await fetch(`${API_URL}/api/Movemnts?${filtroMes(mes)}`);
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al obtener movimientos`);
-  }
-  return response.json();
-}
-
-export async function getBalance(hogar_id: number, { anio, mes }: MesAnio): Promise<Balance> {
-  const url = `${API_URL}/api/Balance/${anio}/${mes + 1}?hogarId=${hogar_id}`;
-  console.log('GET', url);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al obtener balance`);
-  }
-  const data = await response.json();
-  console.log('balance', response.status, JSON.stringify(data));
-  return data;
-}
-
-export async function getGastosPorCategoria(hogar_id: number, { anio, mes }: MesAnio): Promise<CategoryTotal[]> {
-  const url = `${API_URL}/api/Balance/${anio}/${mes + 1}/categorias?hogarId=${hogar_id}`;
-  console.log('GET', url);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al obtener gastos por categoría`);
-  }
-  const data = await response.json();
-  console.log('gastos por categoría', response.status, JSON.stringify(data));
-  return data;
-}
-
-export async function updateMovement(id: number, data: NewMovement): Promise<void> {
-  const response = await fetch(`${API_URL}/api/Movemnts/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, ...data }),
+async function pedirSinRespuesta(ruta: string, metodo: string, cuerpo: object | undefined, error: string): Promise<void> {
+  const response = await authFetch(ruta, {
+    method: metodo,
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Error ${response.status}: ${detail}`);
-  }
-}
-export async function deleteMovement(id: number): Promise<void> {
-  const response = await fetch(`${API_URL}/api/Movemnts/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al eliminar el movimiento`);
-  }
+  if (!response.ok) throw new Error(await mensajeDeError(response, error));
 }
 
-export type NewGoal = Pick<Goal, 'hogar_Id' | 'nombre' | 'montoobjetivo' | 'fechalimite'>;
+// ---- Metas ----
+export type NewGoal = Pick<Goal, 'nombre' | 'montoobjetivo' | 'fechalimite'>;
 
-export async function createGoal(data: NewGoal): Promise<Goal> {
-  const response = await fetch(`${API_URL}/api/Goals`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Error ${response.status}: ${detail}`);
-  }
-  return response.json();
-}
+export const getGoals = () => pedir<Goal[]>('/api/Goal', 'GET', undefined, 'No se pudieron obtener las metas');
+export const createGoal = (data: NewGoal) => pedir<Goal>('/api/Goal', 'POST', data, 'No se pudo crear la meta');
+export const updateGoal = (id: number, data: NewGoal) =>
+  pedirSinRespuesta(`/api/Goal/${id}`, 'PUT', { id, ...data }, 'No se pudo actualizar la meta');
+export const deleteGoal = (id: number) =>
+  pedirSinRespuesta(`/api/Goal/${id}`, 'DELETE', undefined, 'No se pudo eliminar la meta');
 
-export async function updateGoal(id: number, data: NewGoal): Promise<void> {
-  const response = await fetch(`${API_URL}/api/Goal/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, ...data }),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Error ${response.status}: ${detail}`);
-  }
-}
+// ---- Movimientos ----
+export type NewMovement = Omit<Movemnts, 'id' | 'hogar_id' | 'creado_en'>;
 
-export async function deleteGoal(id: number): Promise<void> {
-  const response = await fetch(`${API_URL}/api/Goal/${id}`, { method: 'DELETE' });
-  if (!response.ok) {
-    throw new Error(`Error ${response.status} al eliminar la meta`);
-  }
-}
+export const getMovements = (mes: MesAnio) =>
+  pedir<Movemnts[]>(`/api/Movemnts?${filtroMes(mes)}`, 'GET', undefined, 'No se pudieron obtener los movimientos');
+export const createMovement = (data: NewMovement) =>
+  pedir<Movemnts>('/api/Movemnts', 'POST', data, 'No se pudo guardar el movimiento');
+export const updateMovement = (id: number, data: NewMovement) =>
+  pedirSinRespuesta(`/api/Movemnts/${id}`, 'PUT', { id, ...data }, 'No se pudo actualizar el movimiento');
+export const deleteMovement = (id: number) =>
+  pedirSinRespuesta(`/api/Movemnts/${id}`, 'DELETE', undefined, 'No se pudo eliminar el movimiento');
+
+// ---- Categorías ----
+export const getCategories = () =>
+  pedir<Category[]>('/api/Category', 'GET', undefined, 'No se pudieron obtener las categorías');
+
+// ---- Balance del mes ----
+export const getBalance = ({ anio, mes }: MesAnio) =>
+  pedir<Balance>(`/api/Balance/${anio}/${mes + 1}`, 'GET', undefined, 'No se pudo obtener el balance');
+export const getGastosPorCategoria = ({ anio, mes }: MesAnio) =>
+  pedir<CategoryTotal[]>(`/api/Balance/${anio}/${mes + 1}/categorias`, 'GET', undefined, 'No se pudieron obtener los gastos por categoría');
