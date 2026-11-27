@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles/GlobalStyles';
@@ -68,9 +68,9 @@ export function Inputs({ navigation, route }: Props) {
       .catch((e) => Alert.alert('No se cargaron las categorías', e.message));
   }, []);
 
-  const onChangeFecha = (_: DateTimePickerEvent, selected?: Date) => {
+  const onElegirFecha = (_: DateTimePickerChangeEvent, elegida: Date) => {
     setShowPicker(Platform.OS === 'ios'); // en Android el calendario se cierra solo
-    if (selected) setFecha(selected);
+    setFecha(elegida);
   };
 
   const guardar = async () => {
@@ -85,7 +85,6 @@ export function Inputs({ navigation, route }: Props) {
     try {
       setSaving(true);
       const payload = {
-        hogar_id: 1, // TODO: reemplazar con el hogar del usuario cuando exista el login
         categoria_id: categoriaId,
         monto: valor,
         fecha: toYMD(Fecha),
@@ -192,7 +191,8 @@ export function Inputs({ navigation, route }: Props) {
               value={Fecha}
               mode="date"
               display={Platform.OS === 'ios' ? 'inline' : 'default'}
-              onChange={onChangeFecha}
+              onValueChange={onElegirFecha}
+              onDismiss={() => setShowPicker(false)}
             />
           )}
 
