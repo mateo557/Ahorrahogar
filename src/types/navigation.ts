@@ -15,13 +15,15 @@ export type TabParamList = {
 // Pantallas que van por encima de las pestañas (sin barra inferior)
 export type AppStackParamList = {
   Login: undefined;
+  Register: undefined;
   CreatePerfil: undefined;
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
   Inputs: { movement?: Movemnts } | undefined;
   CreateGoal: { goal?: Goal } | undefined;
+  CambiarPassword: undefined;
 };
 
-// Para pantallas que están en el stack (Login, CreatePerfil, Inputs, CreateGoal)
+// Para pantallas que están en el stack (Login, Register, CreatePerfil, Inputs, CreateGoal)
 export type ScreenProps<RouteName extends keyof AppStackParamList> =
   NativeStackScreenProps<AppStackParamList, RouteName>;
 

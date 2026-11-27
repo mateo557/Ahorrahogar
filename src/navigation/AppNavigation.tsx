@@ -2,9 +2,12 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppStackParamList, TabParamList } from '../types/navigation';
 import { colors } from '../styles/theme';
+import { globalStyles } from '../styles/GlobalStyles';
+import { useAuth } from '../context/AuthContext';
 import { Resume } from '../screens/Resume';
 import { Movements } from '../screens/Movements';
 import { Goals } from '../screens/Goals';
@@ -13,6 +16,8 @@ import { Inputs } from '../screens/Inputs';
 import { CreateGoal } from '../screens/CreateGoal';
 import { CreatePerfil } from '../screens/CreatePerfil';
 import { LoginScreen } from '../screens/Login';
+import { Register } from '../screens/Register';
+import { CambiarPassword } from '../screens/CambiarPassword';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -55,17 +60,39 @@ function MainTabs() {
 }
 
 export function AppNavigation() {
+  const { usuario, cargando } = useAuth();
+
+  // Mientras se revisa si hay una sesión guardada
+  if (cargando) {
+    return (
+      <View style={[globalStyles.screen, globalStyles.centered]}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      {/* TODO: cuando el login funcione, cambiar initialRouteName a "Login" */}
-      <Stack.Navigator initialRouteName="MainTabs" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="CreatePerfil" component={CreatePerfil} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-        {/* "Nuevo gasto": se abre encima de las pestañas, sin la barra inferior */}
-        <Stack.Screen name="Inputs" component={Inputs} options={{ presentation: 'modal' }} />
-        {/* "Nueva meta": también encima de las pestañas */}
-        <Stack.Screen name="CreateGoal" component={CreateGoal} options={{ presentation: 'modal' }} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!usuario ? (
+          // Sin sesión: solo se puede iniciar sesión o crear cuenta
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={Register} />
+          </>
+        ) : !usuario.tiene_hogar ? (
+          // Con sesión pero sin hogar: hay que crear uno o unirse a otro
+          <Stack.Screen name="CreatePerfil" component={CreatePerfil} />
+        ) : (
+          // Con sesión y con hogar: la app completa
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            {/* "Nuevo gasto" y "Nueva meta": se abren encima de las pestañas, sin la barra inferior */}
+            <Stack.Screen name="Inputs" component={Inputs} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="CreateGoal" component={CreateGoal} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="CambiarPassword" component={CambiarPassword} options={{ presentation: 'modal' }} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
