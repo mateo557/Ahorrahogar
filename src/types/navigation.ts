@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import { Movemnts } from './movements';
+import { Goal } from './goal';
 
 // Pestañas de la barra inferior
 export type TabParamList = {
@@ -17,9 +18,10 @@ export type AppStackParamList = {
   CreatePerfil: undefined;
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
   Inputs: { movement?: Movemnts } | undefined;
+  CreateGoal: { goal?: Goal } | undefined;
 };
 
-// Para pantallas que están en el stack (Login, CreatePerfil, Inputs)
+// Para pantallas que están en el stack (Login, CreatePerfil, Inputs, CreateGoal)
 export type ScreenProps<RouteName extends keyof AppStackParamList> =
   NativeStackScreenProps<AppStackParamList, RouteName>;
 

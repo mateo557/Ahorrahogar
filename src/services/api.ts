@@ -21,8 +21,8 @@ export async function getMembers(): Promise<Member[]> {
   return response.json();
 }
 
-export async function getGoals(): Promise<Goal[]> {
-  const response = await fetch(`${API_URL}/api/Goals`);
+export async function getGoals(hogar_id = 1): Promise<Goal[]> {
+  const response = await fetch(`${API_URL}/api/Goal?hogarId=${hogar_id}`);
   if (!response.ok) {
     throw new Error(`Error ${response.status} al obtener objetivos`);
   }
@@ -33,7 +33,7 @@ export async function getGoals(): Promise<Goal[]> {
 export type NewMovement = Omit<Movemnts, 'id' | 'creado_en'>;
 
 export async function createMovement(data: NewMovement): Promise<Movemnts> {
-  console.log('createMovement', JSON.stringify(data));
+ 
   const response = await fetch(`${API_URL}/api/Movemnts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,5 +105,39 @@ export async function deleteMovement(id: number): Promise<void> {
   });
   if (!response.ok) {
     throw new Error(`Error ${response.status} al eliminar el movimiento`);
+  }
+}
+
+export type NewGoal = Pick<Goal, 'hogar_Id' | 'nombre' | 'montoobjetivo' | 'fechalimite'>;
+
+export async function createGoal(data: NewGoal): Promise<Goal> {
+  const response = await fetch(`${API_URL}/api/Goals`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Error ${response.status}: ${detail}`);
+  }
+  return response.json();
+}
+
+export async function updateGoal(id: number, data: NewGoal): Promise<void> {
+  const response = await fetch(`${API_URL}/api/Goal/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, ...data }),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Error ${response.status}: ${detail}`);
+  }
+}
+
+export async function deleteGoal(id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/api/Goal/${id}`, { method: 'DELETE' });
+  if (!response.ok) {
+    throw new Error(`Error ${response.status} al eliminar la meta`);
   }
 }
