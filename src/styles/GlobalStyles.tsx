@@ -217,4 +217,122 @@ export const globalStyles = StyleSheet.create({
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
   },
+
+  // ---- Pantallas de acceso (login, registro) ----
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxxl,
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: fontSize.sm,
+    marginTop: spacing.xs,
+  },
+  linkText: {
+    color: colors.primary,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
+  },
+  // ---- Hogar (crear / unirse / miembros) ----
+  sectionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  codeText: {
+    fontSize: fontSize.display,
+    fontWeight: fontWeight.bold,
+    color: colors.primary,
+    letterSpacing: 6,
+    textAlign: 'center',
+    paddingVertical: spacing.sm,
+  },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: colors.chartTrack,
+    borderRadius: radius.md,
+    padding: spacing.xs,
+    marginTop: spacing.lg,
+  },
+  segmentItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.sm,
+  },
+  segmentItemActive: {
+    backgroundColor: colors.card,
+  },
+  segmentText: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: colors.primary,
+  },
+  smallButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+  },
+  smallButtonText: {
+    color: colors.textInverse,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+  },
+  smallButtonOutline: {
+    borderWidth: 1,
+    borderColor: colors.danger,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+  },
+  smallButtonOutlineText: {
+    color: colors.danger,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+  },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+  },
+  rowActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  scrollPad: {
+    paddingBottom: spacing.xxxl,
+  },
+  // ---- Dirección del servidor (pantalla de inicio de sesión) ----
+  serverLink: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  serverLinkText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
+    textAlign: 'center',
+  },
+  serverBox: {
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    backgroundColor: colors.card,
+  },
 });
